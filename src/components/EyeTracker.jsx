@@ -6,45 +6,42 @@ const EyeTracker = () => {
   const [tracking, setTracking] = useState(false);
 
   useEffect(() => {
-    // ✅ Check every 500ms if GazeRecorderAPI is loaded
-    const checkApi = setInterval(() => {
-      if (window.GazeRecorderAPI) {
-        clearInterval(checkApi);
+    const checkApiLoaded = () => {
+      if (window.GazeRecorderAPI && typeof window.GazeRecorderAPI.Rec === "function") {
         setApiLoaded(true);
         console.log("✅ GazeRecorderAPI Loaded Successfully");
+      } else {
+        console.warn("❌ GazeRecorderAPI not loaded yet. Retrying...");
+        setTimeout(checkApiLoaded, 500);
       }
-    }, 500);
+    };
 
-    return () => clearInterval(checkApi);
+    checkApiLoaded();
   }, []);
 
-  // Function to start calibration
   const handleStartCalibration = () => {
     if (!apiLoaded) {
-      console.error("❌ GazeRecorderAPI not loaded yet.");
+      console.error("❌ GazeRecorderAPI is not loaded yet.");
       return;
     }
 
     console.log("🎯 Starting Calibration...");
-    window.GazeRecorderAPI.Rec(); // Start calibration & tracking
+    window.GazeRecorderAPI.Rec();
 
-    // Handle calibration completion
     window.GazeRecorderAPI.OnCalibrationComplete = function () {
       console.log("✅ Gaze Calibration Complete");
       setCalibrated(true);
       setTracking(true);
     };
 
-    // Handle errors
     window.GazeRecorderAPI.OnError = function (msg) {
       console.error("❌ GazeRecorderAPI Error:", msg);
     };
   };
 
-  // Function to stop tracking
   const handleStopTracking = () => {
     if (!apiLoaded) {
-      console.error("❌ GazeRecorderAPI not loaded yet.");
+      console.error("❌ GazeRecorderAPI is not loaded yet.");
       return;
     }
 
@@ -57,7 +54,7 @@ const EyeTracker = () => {
     <div style={{ textAlign: "center", marginTop: "50px" }}>
       <h1>Gaze Tracking with GazeRecorder</h1>
       {!apiLoaded ? (
-        <p>⏳ Loading GazeRecorder API...</p> // ✅ Show loading message until API loads
+        <p>⏳ Loading GazeRecorder API... (Please wait)</p> // ✅ Now it will retry until API loads
       ) : !calibrated ? (
         <>
           <p>Click below to start calibration.</p>
