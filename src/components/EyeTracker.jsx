@@ -1,36 +1,33 @@
 import React, { useEffect, useState } from "react";
 
 const EyeTracker = () => {
-  const [tracking, setTracking] = useState(true); // State to track if eye tracking is active
+  const [calibrated, setCalibrated] = useState(false);
+  const [tracking, setTracking] = useState(false);
 
-  useEffect(() => {
+  // Function to start calibration
+  const handleStartCalibration = () => {
     if (!window.GazeRecorderAPI) {
       console.error("GazeRecorderAPI not loaded");
       return;
     }
 
-    console.log("Starting Eye Tracking...");
-    window.GazeRecorderAPI.Rec(); // Start recording gaze data
-    setTracking(true);
+    console.log("Starting Calibration...");
+    window.GazeRecorderAPI.Rec(); // Start calibration & tracking
 
-    // Optional: Handle calibration completion
+    // Handle calibration completion
     window.GazeRecorderAPI.OnCalibrationComplete = function () {
       console.log("Gaze Calibration Complete");
+      setCalibrated(true); // Set calibration as complete
+      setTracking(true); // Start tracking after calibration
     };
 
-    // Optional: Handle errors
+    // Handle errors
     window.GazeRecorderAPI.OnError = function (msg) {
       console.error("GazeRecorderAPI Error:", msg);
     };
+  };
 
-    return () => {
-      console.log("Stopping Eye Tracking...");
-      window.GazeRecorderAPI.StopRec(); // Stop tracking when component unmounts
-      setTracking(false);
-    };
-  }, []);
-
-  // Function to manually stop tracking
+  // Function to stop tracking
   const handleStopTracking = () => {
     if (window.GazeRecorderAPI) {
       window.GazeRecorderAPI.StopRec();
@@ -42,24 +39,43 @@ const EyeTracker = () => {
   return (
     <div style={{ textAlign: "center", marginTop: "50px" }}>
       <h1>Gaze Tracking with GazeRecorder</h1>
-      <p>Move your eyes around, and your heatmap will be generated.</p>
-      <p>Check the GazeRecorder dashboard for heatmap analysis.</p>
-      
-      {tracking ? (
-        <button
-          onClick={handleStopTracking}
-          style={{
-            marginTop: "20px",
-            padding: "10px 20px",
-            backgroundColor: "red",
-            color: "white",
-            border: "none",
-            borderRadius: "5px",
-            cursor: "pointer",
-          }}
-        >
-          Stop Eye Tracking
-        </button>
+      {!calibrated ? (
+        <>
+          <p>Click below to start calibration.</p>
+          <button
+            onClick={handleStartCalibration}
+            style={{
+              marginTop: "20px",
+              padding: "10px 20px",
+              backgroundColor: "blue",
+              color: "white",
+              border: "none",
+              borderRadius: "5px",
+              cursor: "pointer",
+            }}
+          >
+            Start Calibration
+          </button>
+        </>
+      ) : tracking ? (
+        <>
+          <p>Move your eyes around, and your heatmap will be generated.</p>
+          <p>Check the GazeRecorder dashboard for heatmap analysis.</p>
+          <button
+            onClick={handleStopTracking}
+            style={{
+              marginTop: "20px",
+              padding: "10px 20px",
+              backgroundColor: "red",
+              color: "white",
+              border: "none",
+              borderRadius: "5px",
+              cursor: "pointer",
+            }}
+          >
+            Stop Eye Tracking
+          </button>
+        </>
       ) : (
         <p>Eye tracking has been stopped.</p>
       )}
