@@ -1,52 +1,64 @@
-import React, { useState, useEffect } from "react"; // ✅ Keep only necessary imports
+import React, { useEffect, useState } from "react";
 
 const EyeTracker = () => {
+  const [apiLoaded, setApiLoaded] = useState(false);
   const [calibrated, setCalibrated] = useState(false);
   const [tracking, setTracking] = useState(false);
 
   useEffect(() => {
-    if (!window.GazeRecorderAPI) {
-      console.error("GazeRecorderAPI not loaded");
-      return;
-    }
-  }, []); // ✅ Use useEffect so it's not considered unused
+    // ✅ Check every 500ms if GazeRecorderAPI is loaded
+    const checkApi = setInterval(() => {
+      if (window.GazeRecorderAPI) {
+        clearInterval(checkApi);
+        setApiLoaded(true);
+        console.log("✅ GazeRecorderAPI Loaded Successfully");
+      }
+    }, 500);
+
+    return () => clearInterval(checkApi);
+  }, []);
 
   // Function to start calibration
   const handleStartCalibration = () => {
-    if (!window.GazeRecorderAPI) {
-      console.error("GazeRecorderAPI not loaded");
+    if (!apiLoaded) {
+      console.error("❌ GazeRecorderAPI not loaded yet.");
       return;
     }
 
-    console.log("Starting Calibration...");
+    console.log("🎯 Starting Calibration...");
     window.GazeRecorderAPI.Rec(); // Start calibration & tracking
 
     // Handle calibration completion
     window.GazeRecorderAPI.OnCalibrationComplete = function () {
-      console.log("Gaze Calibration Complete");
+      console.log("✅ Gaze Calibration Complete");
       setCalibrated(true);
       setTracking(true);
     };
 
     // Handle errors
     window.GazeRecorderAPI.OnError = function (msg) {
-      console.error("GazeRecorderAPI Error:", msg);
+      console.error("❌ GazeRecorderAPI Error:", msg);
     };
   };
 
   // Function to stop tracking
   const handleStopTracking = () => {
-    if (window.GazeRecorderAPI) {
-      window.GazeRecorderAPI.StopRec();
-      setTracking(false);
-      console.log("Eye Tracking Stopped.");
+    if (!apiLoaded) {
+      console.error("❌ GazeRecorderAPI not loaded yet.");
+      return;
     }
+
+    window.GazeRecorderAPI.StopRec();
+    setTracking(false);
+    console.log("🚫 Eye Tracking Stopped.");
   };
 
   return (
     <div style={{ textAlign: "center", marginTop: "50px" }}>
       <h1>Gaze Tracking with GazeRecorder</h1>
-      {!calibrated ? (
+      {!apiLoaded ? (
+        <p>⏳ Loading GazeRecorder API...</p> // ✅ Show loading message until API loads
+      ) : !calibrated ? (
         <>
           <p>Click below to start calibration.</p>
           <button
@@ -84,7 +96,7 @@ const EyeTracker = () => {
           </button>
         </>
       ) : (
-        <p>Eye tracking has been stopped.</p>
+        <p>🚫 Eye tracking has been stopped.</p>
       )}
     </div>
   );
