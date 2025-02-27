@@ -6,26 +6,34 @@ const EyeTracker = () => {
   const [tracking, setTracking] = useState(false);
 
   useEffect(() => {
-    // ✅ Dynamically add the GazeRecorderAPI script
-    const script = document.createElement("script");
-    script.src = "https://api.gazerecorder.com/GazeCloudAPI.js";
-    script.async = true;
-    script.onload = () => {
-      console.log("✅ GazeRecorderAPI Script Loaded Successfully");
-      checkApiLoaded();
+    const loadScript = () => {
+      console.log("🔄 Injecting GazeRecorderAPI script...");
+      const script = document.createElement("script");
+      script.src = "https://api.gazerecorder.com/GazeCloudAPI.js";
+      script.async = true;
+      script.onload = () => {
+        console.log("✅ GazeRecorderAPI Script Loaded");
+        checkApiReady();
+      };
+      script.onerror = () => console.error("❌ Failed to load GazeRecorderAPI script");
+      document.body.appendChild(script);
     };
-    script.onerror = () => console.error("❌ Failed to load GazeRecorderAPI script");
-    document.body.appendChild(script);
 
-    const checkApiLoaded = () => {
+    const checkApiReady = () => {
       if (window.GazeRecorderAPI && typeof window.GazeRecorderAPI.Rec === "function") {
-        console.log("✅ GazeRecorderAPI is fully initialized!");
+        console.log("✅ GazeRecorderAPI is ready!");
         setApiLoaded(true);
       } else {
-        console.warn("❌ GazeRecorderAPI not ready. Retrying in 1 second...");
-        setTimeout(checkApiLoaded, 1000);
+        console.warn("⏳ Waiting for GazeRecorderAPI... Retrying in 1 second...");
+        setTimeout(checkApiReady, 1000);
       }
     };
+
+    if (!window.GazeRecorderAPI) {
+      loadScript();
+    } else {
+      checkApiReady();
+    }
   }, []);
 
   const handleStartCalibration = () => {
