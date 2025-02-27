@@ -11,12 +11,16 @@ const EyeTracker = () => {
         setApiLoaded(true);
         console.log("✅ GazeRecorderAPI Loaded Successfully");
       } else {
-        console.warn("❌ GazeRecorderAPI not loaded yet. Retrying...");
-        setTimeout(checkApiLoaded, 500);
+        console.warn("❌ GazeRecorderAPI not loaded. Retrying in 1 second...");
+        setTimeout(checkApiLoaded, 1000); // Try again every second
       }
     };
 
-    checkApiLoaded();
+    // ✅ Wait for `window.onload` to ensure all scripts load
+    window.onload = () => {
+      console.log("🌍 Window Loaded, Checking GazeRecorderAPI...");
+      checkApiLoaded();
+    };
   }, []);
 
   const handleStartCalibration = () => {
@@ -54,7 +58,7 @@ const EyeTracker = () => {
     <div style={{ textAlign: "center", marginTop: "50px" }}>
       <h1>Gaze Tracking with GazeRecorder</h1>
       {!apiLoaded ? (
-        <p>⏳ Loading GazeRecorder API... (Please wait)</p> // ✅ Now it will retry until API loads
+        <p>⏳ Loading GazeRecorder API... (Please wait)</p>
       ) : !calibrated ? (
         <>
           <p>Click below to start calibration.</p>
