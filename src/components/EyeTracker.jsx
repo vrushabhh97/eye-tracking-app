@@ -13,27 +13,20 @@ const EyeTracker = () => {
       script.async = true;
       script.onload = () => {
         console.log("✅ GazeRecorderAPI Script Loaded");
-        checkApiReady();
+        setTimeout(() => {
+          if (window.GazeRecorderAPI) {
+            console.log("✅ GazeRecorderAPI is fully initialized!");
+            setApiLoaded(true);
+          } else {
+            console.warn("❌ GazeRecorderAPI did not initialize.");
+          }
+        }, 3000);
       };
       script.onerror = () => console.error("❌ Failed to load GazeRecorderAPI script");
       document.body.appendChild(script);
     };
 
-    const checkApiReady = () => {
-      if (window.GazeRecorderAPI && typeof window.GazeRecorderAPI.Rec === "function") {
-        console.log("✅ GazeRecorderAPI is fully initialized!");
-        setApiLoaded(true);
-      } else {
-        console.warn("⏳ Waiting for GazeRecorderAPI... Retrying in 1 second...");
-        setTimeout(checkApiReady, 1000);
-      }
-    };
-
-    if (!window.GazeRecorderAPI) {
-      loadScript();
-    } else {
-      checkApiReady();
-    }
+    loadScript();
   }, []);
 
   const handleStartCalibration = () => {
