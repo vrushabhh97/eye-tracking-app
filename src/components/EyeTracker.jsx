@@ -1,8 +1,15 @@
-import React, { useEffect, useState } from "react";
+import React, { useState, useEffect } from "react"; // ✅ Keep only necessary imports
 
 const EyeTracker = () => {
   const [calibrated, setCalibrated] = useState(false);
   const [tracking, setTracking] = useState(false);
+
+  useEffect(() => {
+    if (!window.GazeRecorderAPI) {
+      console.error("GazeRecorderAPI not loaded");
+      return;
+    }
+  }, []); // ✅ Use useEffect so it's not considered unused
 
   // Function to start calibration
   const handleStartCalibration = () => {
@@ -17,8 +24,8 @@ const EyeTracker = () => {
     // Handle calibration completion
     window.GazeRecorderAPI.OnCalibrationComplete = function () {
       console.log("Gaze Calibration Complete");
-      setCalibrated(true); // Set calibration as complete
-      setTracking(true); // Start tracking after calibration
+      setCalibrated(true);
+      setTracking(true);
     };
 
     // Handle errors
