@@ -2,8 +2,6 @@ import React, { useEffect, useState } from "react";
 
 const EyeTracker = () => {
   const [apiLoaded, setApiLoaded] = useState(false);
-  const [calibrated, setCalibrated] = useState(false);
-  const [tracking, setTracking] = useState(false);
 
   useEffect(() => {
     const loadScript = () => {
@@ -36,24 +34,17 @@ const EyeTracker = () => {
     }
   }, []);
 
-  const handleStartCalibration = () => {
+  const handleStartTracking = () => {
     if (!apiLoaded) {
       console.error("❌ GazeRecorderAPI is not loaded yet.");
       return;
     }
 
-    console.log("🎯 Starting Calibration...");
+    console.log("🎯 Starting Eye Tracking...");
     window.GazeRecorderAPI.Rec();
-
-    window.GazeRecorderAPI.OnCalibrationComplete = function () {
-      console.log("✅ Gaze Calibration Complete");
-      setCalibrated(true);
-      setTracking(true);
-    };
-
-    window.GazeRecorderAPI.OnError = function (msg) {
-      console.error("❌ GazeRecorderAPI Error:", msg);
-    };
+    
+    // ✅ ENABLE HEATMAP
+    window.GazeRecorderAPI.ShowHeatMap(true);
   };
 
   const handleStopTracking = () => {
@@ -63,20 +54,22 @@ const EyeTracker = () => {
     }
 
     window.GazeRecorderAPI.StopRec();
-    setTracking(false);
     console.log("🚫 Eye Tracking Stopped.");
+    
+    // ✅ DISABLE HEATMAP
+    window.GazeRecorderAPI.ShowHeatMap(false);
   };
 
   return (
     <div style={{ textAlign: "center", marginTop: "50px" }}>
-      <h1>Gaze Tracking with GazeRecorder</h1>
+      <h1>Gaze Tracking with Heatmap</h1>
       {!apiLoaded ? (
         <p>⏳ Loading GazeRecorder API... (Please wait)</p>
-      ) : !calibrated ? (
+      ) : (
         <>
-          <p>Click below to start calibration.</p>
+          <p>Click the button below to start eye tracking with heatmap.</p>
           <button
-            onClick={handleStartCalibration}
+            onClick={handleStartTracking}
             style={{
               marginTop: "20px",
               padding: "10px 20px",
@@ -87,13 +80,9 @@ const EyeTracker = () => {
               cursor: "pointer",
             }}
           >
-            Start Calibration
+            Start Tracking
           </button>
-        </>
-      ) : tracking ? (
-        <>
-          <p>Move your eyes around, and your heatmap will be generated.</p>
-          <p>Check the GazeRecorder dashboard for heatmap analysis.</p>
+
           <button
             onClick={handleStopTracking}
             style={{
@@ -104,13 +93,12 @@ const EyeTracker = () => {
               border: "none",
               borderRadius: "5px",
               cursor: "pointer",
+              marginLeft: "20px",
             }}
           >
-            Stop Eye Tracking
+            Stop Tracking
           </button>
         </>
-      ) : (
-        <p>🚫 Eye tracking has been stopped.</p>
       )}
     </div>
   );
