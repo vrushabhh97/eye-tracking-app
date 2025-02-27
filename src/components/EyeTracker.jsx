@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from "react";
+import React, { useEffect, useRef, useState, useCallback } from "react";
 import * as d3 from "d3";
 
 const EyeTracker = () => {
@@ -29,11 +29,8 @@ const EyeTracker = () => {
     };
   }, []);
 
-  useEffect(() => {
-    drawHeatmap();
-  }, [gazeData]);
-
-  const drawHeatmap = () => {
+  // ✅ Use useCallback to memoize drawHeatmap function
+  const drawHeatmap = useCallback(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
     const ctx = canvas.getContext("2d");
@@ -64,7 +61,11 @@ const EyeTracker = () => {
       ctx.fillStyle = colorScale(count); // Apply gradient color based on gaze intensity
       ctx.fill();
     });
-  };
+  }, [gazeData]); // ✅ Now React knows drawHeatmap depends on gazeData
+
+  useEffect(() => {
+    drawHeatmap();
+  }, [gazeData, drawHeatmap]); // ✅ Added drawHeatmap as a dependency
 
   return (
     <div style={{ position: "relative", width: "100vw", height: "100vh" }}>
