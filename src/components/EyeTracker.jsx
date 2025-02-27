@@ -21,7 +21,7 @@ const EyeTracker = () => {
 
     const checkApiReady = () => {
       if (window.GazeRecorderAPI && typeof window.GazeRecorderAPI.Rec === "function") {
-        console.log("✅ GazeRecorderAPI is ready!");
+        console.log("✅ GazeRecorderAPI is fully initialized!");
         setApiLoaded(true);
       } else {
         console.warn("⏳ Waiting for GazeRecorderAPI... Retrying in 1 second...");
