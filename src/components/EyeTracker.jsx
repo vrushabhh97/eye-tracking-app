@@ -1,87 +1,68 @@
-import React, { useEffect, useRef, useState, useCallback } from "react";
-import * as d3 from "d3";
+import React, { useEffect, useState } from "react";
 
 const EyeTracker = () => {
-  const canvasRef = useRef(null);
-  const [gazeData, setGazeData] = useState([]);
+  const [tracking, setTracking] = useState(true); // State to track if eye tracking is active
 
   useEffect(() => {
-    if (!window.GazeCloudAPI) {
-      console.error("GazeCloudAPI not loaded");
+    if (!window.GazeRecorderAPI) {
+      console.error("GazeRecorderAPI not loaded");
       return;
     }
 
-    // Start Eye Tracking
-    window.GazeCloudAPI.StartEyeTracking();
+    console.log("Starting Eye Tracking...");
+    window.GazeRecorderAPI.Rec(); // Start recording gaze data
+    setTracking(true);
 
-    // Capture gaze data
-    window.GazeCloudAPI.OnResult = function (GazeData) {
-      if (GazeData.state === 0) {
-        setGazeData((prevData) => [
-          ...prevData,
-          { x: GazeData.docX, y: GazeData.docY, timestamp: Date.now() },
-        ]);
-      }
+    // Optional: Handle calibration completion
+    window.GazeRecorderAPI.OnCalibrationComplete = function () {
+      console.log("Gaze Calibration Complete");
+    };
+
+    // Optional: Handle errors
+    window.GazeRecorderAPI.OnError = function (msg) {
+      console.error("GazeRecorderAPI Error:", msg);
     };
 
     return () => {
-      window.GazeCloudAPI.StopEyeTracking();
+      console.log("Stopping Eye Tracking...");
+      window.GazeRecorderAPI.StopRec(); // Stop tracking when component unmounts
+      setTracking(false);
     };
   }, []);
 
-  // ✅ Use useCallback to memoize drawHeatmap function
-  const drawHeatmap = useCallback(() => {
-    const canvas = canvasRef.current;
-    if (!canvas) return;
-    const ctx = canvas.getContext("2d");
-
-    // Clear previous frame
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-    // Count how many times each area has been looked at
-    const heatmapData = {};
-    gazeData.forEach(({ x, y }) => {
-      const key = `${Math.round(x / 10) * 10},${Math.round(y / 10) * 10}`;
-      heatmapData[key] = (heatmapData[key] || 0) + 1;
-    });
-
-    // Determine the max gaze count for color scaling
-    const maxGazeCount = Math.max(...Object.values(heatmapData), 1);
-
-    // Define color scale from Green → Yellow → Red
-    const colorScale = d3
-      .scaleSequential(d3.interpolateRdYlGn)
-      .domain([maxGazeCount, 1]); // Red for max, green for low
-
-    // Draw heatmap points
-    Object.entries(heatmapData).forEach(([key, count]) => {
-      const [x, y] = key.split(",").map(Number);
-      ctx.beginPath();
-      ctx.arc(x, y, 30, 0, 2 * Math.PI);
-      ctx.fillStyle = colorScale(count); // Apply gradient color based on gaze intensity
-      ctx.fill();
-    });
-  }, [gazeData]); // ✅ Now React knows drawHeatmap depends on gazeData
-
-  useEffect(() => {
-    drawHeatmap();
-  }, [gazeData, drawHeatmap]); // ✅ Added drawHeatmap as a dependency
+  // Function to manually stop tracking
+  const handleStopTracking = () => {
+    if (window.GazeRecorderAPI) {
+      window.GazeRecorderAPI.StopRec();
+      setTracking(false);
+      console.log("Eye Tracking Stopped.");
+    }
+  };
 
   return (
-    <div style={{ position: "relative", width: "100vw", height: "100vh" }}>
-      <h1 style={{ textAlign: "center" }}>Eye Tracking Heatmap</h1>
-      <p style={{ textAlign: "center" }}>Move your eyes around the screen.</p>
-      <canvas
-        ref={canvasRef}
-        width={window.innerWidth}
-        height={window.innerHeight}
-        style={{
-          position: "absolute",
-          top: 0,
-          left: 0,
-          pointerEvents: "none",
-        }}
-      ></canvas>
+    <div style={{ textAlign: "center", marginTop: "50px" }}>
+      <h1>Gaze Tracking with GazeRecorder</h1>
+      <p>Move your eyes around, and your heatmap will be generated.</p>
+      <p>Check the GazeRecorder dashboard for heatmap analysis.</p>
+      
+      {tracking ? (
+        <button
+          onClick={handleStopTracking}
+          style={{
+            marginTop: "20px",
+            padding: "10px 20px",
+            backgroundColor: "red",
+            color: "white",
+            border: "none",
+            borderRadius: "5px",
+            cursor: "pointer",
+          }}
+        >
+          Stop Eye Tracking
+        </button>
+      ) : (
+        <p>Eye tracking has been stopped.</p>
+      )}
     </div>
   );
 };
